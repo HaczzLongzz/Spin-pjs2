@@ -26,15 +26,9 @@ end
 
 local function fireBtn(btn)
 local fired=false
-pcall(function()
-firebutton(btn,"LeftMouseButton")
-fired=true
-end)
+pcall(function() firebutton(btn,"LeftMouseButton") fired=true end)
 if fired then return end
-pcall(function()
-firebutton(btn)
-fired=true
-end)
+pcall(function() firebutton(btn) fired=true end)
 if fired then return end
 pcall(function()
 local conns=getconnections(btn.MouseButton1Click)
@@ -57,15 +51,47 @@ for _,c in ipairs(u) do c:Fire() end
 end)
 end
 
+local function handlePopup(isSupreme)
+task.wait(0.5)
+for _,v in pairs(gui:GetDescendants())do
+if v:IsA("TextLabel") and v.Visible then
+local t=v.Text or ""
+if t:find("Are you sure") or t:find("Rolling replaces") then
+local frame=v.Parent
+local buttons={}
+for _,b in pairs(frame:GetDescendants())do
+if b:IsA("ImageButton") or b:IsA("TextButton") then
+table.insert(buttons,b)
+end
+end
+table.sort(buttons,function(a,b)
+return a.AbsolutePosition.X < b.AbsolutePosition.X
+end)
+if #buttons>=2 then
+if isSupreme then
+-- Supreme: bam X DO (phai) = giu clan Supreme
+fireBtn(buttons[#buttons])
+print("Supreme: giu lai")
+else
+-- Khong phai: bam TICK XANH (trai) = bo, quay tiep
+fireBtn(buttons[1])
+print("Not supreme: bo, quay tiep")
+end
+end
+return
+end
+end
+end
+end
+
 local function checkClan()
--- Pattern chinh xac: "username ClanName ( Rarity )"
 for _,v in pairs(gui:GetDescendants())do
 if v:IsA("TextLabel") and v.Visible then
 local t=v.Text or ""
 if t:find("%(") and t:find("%)") then
 for _,c in ipairs(CLANS)do
 if t:find(c) then
-print("SUPREME FOUND:",t)
+print("SUPREME:",t)
 return c
 end
 end
@@ -74,6 +100,49 @@ end
 end
 return nil
 end
+
+-- STOP BUTTON UI
+local stopGui=Instance.new("ScreenGui")
+stopGui.Name="SpinBotUI"
+stopGui.ResetOnSpawn=false
+stopGui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+stopGui.Parent=lp:WaitForChild("PlayerGui")
+
+local frame=Instance.new("Frame")
+frame.Size=UDim2.new(0,140,0,50)
+frame.Position=UDim2.new(0,10,1,-60)
+frame.BackgroundColor3=Color3.fromRGB(30,30,30)
+frame.BorderSizePixel=0
+frame.Parent=stopGui
+Instance.new("UICorner",frame).CornerRadius=UDim.new(0,8)
+
+local stopBtn=Instance.new("TextButton")
+stopBtn.Size=UDim2.new(1,-10,1,-10)
+stopBtn.Position=UDim2.new(0,5,0,5)
+stopBtn.BackgroundColor3=Color3.fromRGB(200,50,50)
+stopBtn.Text="STOP SPIN"
+stopBtn.TextColor3=Color3.new(1,1,1)
+stopBtn.Font=Enum.Font.GothamBold
+stopBtn.TextScaled=true
+stopBtn.BorderSizePixel=0
+stopBtn.Parent=frame
+Instance.new("UICorner",stopBtn).CornerRadius=UDim.new(0,6)
+
+local spinLabel=Instance.new("TextLabel")
+spinLabel.Size=UDim2.new(1,0,0,20)
+spinLabel.Position=UDim2.new(0,0,-0.5,0)
+spinLabel.BackgroundTransparency=1
+spinLabel.Text="Spins: 0"
+spinLabel.TextColor3=Color3.new(1,1,1)
+spinLabel.Font=Enum.Font.Gotham
+spinLabel.TextScaled=true
+spinLabel.Parent=frame
+
+stopBtn.MouseButton1Click:Connect(function()
+RUNNING=false
+notify("SpinBot","STOPPED - "..SPINS.." spins total.")
+stopGui:Destroy()
+end)
 
 local function main()
 notify("SpinBot","Waiting for Roll button...")
@@ -90,7 +159,7 @@ notify("ERROR","Mo UI spin truoc!")
 return
 end
 
-notify("SpinBot","Found! Farming Supreme 0.1%...")
+notify("SpinBot","Found! Farming Supreme...")
 
 while RUNNING do
 btn=findRollBtn()
@@ -104,22 +173,23 @@ end
 
 fireBtn(btn)
 SPINS=SPINS+1
+spinLabel.Text="Spins: "..SPINS
 print("Spin#"..SPINS)
 
--- Doi animation hien ket qua
 task.wait(1.5)
 
--- Check Supreme
 local r=checkClan()
-print("Result:",tostring(r))
 if r then
 notify("SUPREME GOT!",r.." - "..SPINS.." spins!")
+handlePopup(true)
 RUNNING=false
-task.wait(5)
+task.wait(3)
+stopGui:Destroy()
 TeleportService:Teleport(game.PlaceId,lp)
 return
 end
 
+handlePopup(false)
 task.wait(0.3+math.random()*0.3)
 end
 end
