@@ -24,24 +24,51 @@ end
 return nil
 end
 
--- Khong doc spin count
--- Chi check Roll button con visible khong
--- Khi het spin → Roll button bien mat hoac disabled
-local function isRollAvailable()
-local btn=findRollBtn()
-if not btn then return false end
--- Check button co bi disabled khong
-if not btn.Visible then return false end
-if not btn.Active then return false end
-return true
+local function fireBtn(btn)
+local fired=false
+pcall(function()
+firebutton(btn,"LeftMouseButton")
+fired=true
+end)
+if fired then return end
+pcall(function()
+firebutton(btn)
+fired=true
+end)
+if fired then return end
+pcall(function()
+local conns=getconnections(btn.MouseButton1Click)
+for _,c in ipairs(conns) do c:Fire() end
+fired=true
+end)
+if fired then return end
+pcall(function()
+local conns=getconnections(btn.Activated)
+for _,c in ipairs(conns) do c:Fire() end
+fired=true
+end)
+if fired then return end
+pcall(function()
+local d=getconnections(btn.MouseButton1Down)
+for _,c in ipairs(d) do c:Fire() end
+task.wait(0.05)
+local u=getconnections(btn.MouseButton1Up)
+for _,c in ipairs(u) do c:Fire() end
+end)
 end
 
 local function checkClan()
+-- Pattern chinh xac: "username ClanName ( Rarity )"
 for _,v in pairs(gui:GetDescendants())do
 if v:IsA("TextLabel") and v.Visible then
 local t=v.Text or ""
+if t:find("%(") and t:find("%)") then
 for _,c in ipairs(CLANS)do
-if t:find(c) then return c end
+if t:find(c) then
+print("SUPREME FOUND:",t)
+return c
+end
+end
 end
 end
 end
@@ -68,39 +95,32 @@ notify("SpinBot","Found! Farming Supreme 0.1%...")
 while RUNNING do
 btn=findRollBtn()
 
--- Neu khong tim thay Roll button = het spin
--- Hoac button bi disable
 if not btn or not btn.Visible or not btn.Active then
-notify("SpinBot","Het spin → doi server...")
+notify("SpinBot","Het spin, doi server...")
 task.wait(2)
 TeleportService:Teleport(game.PlaceId,lp)
 return
 end
 
--- SPIN
-btn:Activate()
+fireBtn(btn)
 SPINS=SPINS+1
 print("Spin#"..SPINS)
 
--- Doi animation
-task.wait(0.5)
+-- Doi animation hien ket qua
+task.wait(1.5)
 
--- Skip animation
-btn:Activate()
-
-task.wait(0.5)
-
--- Check clan
+-- Check Supreme
 local r=checkClan()
+print("Result:",tostring(r))
 if r then
-notify("SUPREME!",r.." - "..SPINS.." spins!")
+notify("SUPREME GOT!",r.." - "..SPINS.." spins!")
 RUNNING=false
 task.wait(5)
 TeleportService:Teleport(game.PlaceId,lp)
 return
 end
 
-task.wait(0.8+math.random()*0.5)
+task.wait(0.3+math.random()*0.3)
 end
 end
 
