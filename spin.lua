@@ -24,15 +24,16 @@ end
 return nil
 end
 
-local function getSpins()
-for _,v in pairs(gui:GetDescendants())do
-if v:IsA("TextLabel") then
-local t=v.Text or ""
-local n=t:match("^(%d+)%s+[Ss]pins?$")
-if n then return tonumber(n) end
-end
-end
-return nil
+-- Khong doc spin count
+-- Chi check Roll button con visible khong
+-- Khi het spin → Roll button bien mat hoac disabled
+local function isRollAvailable()
+local btn=findRollBtn()
+if not btn then return false end
+-- Check button co bi disabled khong
+if not btn.Visible then return false end
+if not btn.Active then return false end
+return true
 end
 
 local function checkClan()
@@ -66,28 +67,30 @@ notify("SpinBot","Found! Farming Supreme 0.1%...")
 
 while RUNNING do
 btn=findRollBtn()
-if not btn then task.wait(0.5) continue end
 
-local s=getSpins()
-if s~=nil and s<=0 then
-notify("SpinBot","Het spin, doi server...")
+-- Neu khong tim thay Roll button = het spin
+-- Hoac button bi disable
+if not btn or not btn.Visible or not btn.Active then
+notify("SpinBot","Het spin → doi server...")
 task.wait(2)
 TeleportService:Teleport(game.PlaceId,lp)
 return
 end
 
--- ACTIVATE TRUC TIEP - khong can click vat ly
+-- SPIN
 btn:Activate()
 SPINS=SPINS+1
-print("Spin#"..SPINS.." spins:"..tostring(s))
+print("Spin#"..SPINS)
 
-task.wait(0.4)
+-- Doi animation
+task.wait(0.5)
 
--- Skip animation bang Activate lan 2
+-- Skip animation
 btn:Activate()
 
-task.wait(0.4)
+task.wait(0.5)
 
+-- Check clan
 local r=checkClan()
 if r then
 notify("SUPREME!",r.." - "..SPINS.." spins!")
