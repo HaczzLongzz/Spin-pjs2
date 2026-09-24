@@ -51,6 +51,23 @@ for _,c in ipairs(u) do c:Fire() end
 end)
 end
 
+-- 5 clicks trong 1 giay = skip animation
+local function skipAnim()
+local vp=workspace.CurrentCamera.ViewportSize
+local cx=vp.X/2
+local cy=vp.Y/2
+task.wait(0.2) -- doi anim bat dau
+for i=1,5 do
+pcall(function()
+mousemoveabs(cx,cy)
+mouse1press()
+task.wait(0.02)
+mouse1release()
+end)
+task.wait(0.18) -- 5 clicks / 1 giay = 0.2s moi click
+end
+end
+
 local function handlePopup(isSupreme)
 task.wait(0.5)
 for _,v in pairs(gui:GetDescendants())do
@@ -69,13 +86,11 @@ return a.AbsolutePosition.X < b.AbsolutePosition.X
 end)
 if #buttons>=2 then
 if isSupreme then
--- Supreme: bam X DO (phai) = giu clan Supreme
 fireBtn(buttons[#buttons])
-print("Supreme: giu lai")
+print("Supreme: X, giu lai")
 else
--- Khong phai: bam TICK XANH (trai) = bo, quay tiep
 fireBtn(buttons[1])
-print("Not supreme: bo, quay tiep")
+print("Not supreme: tick, quay tiep")
 end
 end
 return
@@ -109,16 +124,26 @@ stopGui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
 stopGui.Parent=lp:WaitForChild("PlayerGui")
 
 local frame=Instance.new("Frame")
-frame.Size=UDim2.new(0,140,0,50)
-frame.Position=UDim2.new(0,10,1,-60)
+frame.Size=UDim2.new(0,140,0,60)
+frame.Position=UDim2.new(0,10,1,-70)
 frame.BackgroundColor3=Color3.fromRGB(30,30,30)
 frame.BorderSizePixel=0
 frame.Parent=stopGui
 Instance.new("UICorner",frame).CornerRadius=UDim.new(0,8)
 
+local spinLabel=Instance.new("TextLabel")
+spinLabel.Size=UDim2.new(1,0,0,25)
+spinLabel.Position=UDim2.new(0,0,0,5)
+spinLabel.BackgroundTransparency=1
+spinLabel.Text="Spins: 0"
+spinLabel.TextColor3=Color3.new(1,1,1)
+spinLabel.Font=Enum.Font.GothamBold
+spinLabel.TextScaled=true
+spinLabel.Parent=frame
+
 local stopBtn=Instance.new("TextButton")
-stopBtn.Size=UDim2.new(1,-10,1,-10)
-stopBtn.Position=UDim2.new(0,5,0,5)
+stopBtn.Size=UDim2.new(1,-10,0,28)
+stopBtn.Position=UDim2.new(0,5,0,30)
 stopBtn.BackgroundColor3=Color3.fromRGB(200,50,50)
 stopBtn.Text="STOP SPIN"
 stopBtn.TextColor3=Color3.new(1,1,1)
@@ -127,16 +152,6 @@ stopBtn.TextScaled=true
 stopBtn.BorderSizePixel=0
 stopBtn.Parent=frame
 Instance.new("UICorner",stopBtn).CornerRadius=UDim.new(0,6)
-
-local spinLabel=Instance.new("TextLabel")
-spinLabel.Size=UDim2.new(1,0,0,20)
-spinLabel.Position=UDim2.new(0,0,-0.5,0)
-spinLabel.BackgroundTransparency=1
-spinLabel.Text="Spins: 0"
-spinLabel.TextColor3=Color3.new(1,1,1)
-spinLabel.Font=Enum.Font.Gotham
-spinLabel.TextScaled=true
-spinLabel.Parent=frame
 
 stopBtn.MouseButton1Click:Connect(function()
 RUNNING=false
@@ -165,20 +180,26 @@ while RUNNING do
 btn=findRollBtn()
 
 if not btn or not btn.Visible or not btn.Active then
-notify("SpinBot","Het spin, doi server...")
-task.wait(2)
-TeleportService:Teleport(game.PlaceId,lp)
+notify("SpinBot","Het spin! Dung lai.")
+RUNNING=false
 return
 end
 
+-- SPIN
 fireBtn(btn)
 SPINS=SPINS+1
 spinLabel.Text="Spins: "..SPINS
 print("Spin#"..SPINS)
 
-task.wait(1.5)
+-- SKIP ANIMATION (5 clicks trong 1 giay)
+skipAnim()
 
+-- Doi result hien
+task.wait(0.3)
+
+-- Check Supreme
 local r=checkClan()
+print("Result:",tostring(r))
 if r then
 notify("SUPREME GOT!",r.." - "..SPINS.." spins!")
 handlePopup(true)
@@ -189,8 +210,10 @@ TeleportService:Teleport(game.PlaceId,lp)
 return
 end
 
+-- Xu ly popup Legendary/Mythic
 handlePopup(false)
-task.wait(0.3+math.random()*0.3)
+
+task.wait(0.2+math.random()*0.2)
 end
 end
 
